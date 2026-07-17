@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Pengurusan Unit Beruniform — SMK Taman Fajar</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1E3D;
+    --navy-2:#122C57;
+    --blue:#14509E;
+    --blue-light:#3B82C4;
+    --gold:#C9A227;
+    --gold-light:#E8D48A;
+    --cream:#F7F5F0;
+    --ink:#1A2438;
+    --ink-soft:#5B6B87;
+  }
+  *{font-family:'Inter',sans-serif;}
+  h1,h2,h3,.font-display{font-family:'Poppins',sans-serif;}
+  body{background:var(--cream); color:var(--ink);}
+  .glass{
+    background:rgba(255,255,255,0.65);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:0 8px 32px rgba(11,30,61,0.08);
+  }
+  .glass-dark{
+    background:rgba(11,30,61,0.55);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-scroll::-webkit-scrollbar{width:5px;}
+  .sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15); border-radius:10px;}
+  .batik-pattern{
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(201,162,39,0.18) 0, transparent 40%),
+      radial-gradient(circle at 80% 20%, rgba(201,162,39,0.14) 0, transparent 35%),
+      radial-gradient(circle at 60% 80%, rgba(201,162,39,0.10) 0, transparent 45%);
+  }
+  .nav-item{transition:all .18s ease;}
+  .nav-item:hover{background:rgba(255,255,255,0.08); transform:translateX(3px);}
+  .nav-item.active{background:linear-gradient(90deg, rgba(201,162,39,0.25), rgba(201,162,39,0.05)); border-left:3px solid var(--gold);}
+  .stat-card{transition:transform .25s ease, box-shadow .25s ease;}
+  .stat-card:hover{transform:translateY(-4px); box-shadow:0 16px 40px rgba(11,30,61,0.14);}
+  .section-page{display:none;}
+  .section-page.active{display:block; animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .btn-gold{background:linear-gradient(135deg, var(--gold-light), var(--gold)); color:#402f04; font-weight:600;}
+  .btn-gold:hover{filter:brightness(1.05); box-shadow:0 6px 18px rgba(201,162,39,0.4);}
+  .btn-navy{background:linear-gradient(135deg, var(--blue), var(--navy)); color:white; font-weight:600;}
+  .btn-navy:hover{filter:brightness(1.1);}
+  input, select, textarea{outline:none;}
+  input:focus, select:focus, textarea:focus{box-shadow:0 0 0 3px rgba(201,162,39,0.25); border-color:var(--gold);}
+  .modal-overlay{background:rgba(11,30,61,0.55); backdrop-filter:blur(4px);}
+  .toast{animation:slideIn .3s ease, fadeOut .4s ease 2.6s forwards;}
+  @keyframes slideIn{from{transform:translateX(120%);} to{transform:translateX(0);}}
+  @keyframes fadeOut{to{opacity:0; transform:translateX(30px);}}
+  table thead th{position:sticky; top:0; background:#fff;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:#d8d2c2; border-radius:8px;}
+  .eyebrow{letter-spacing:.12em; font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--gold);}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ LOGIN GATE (ADMIN) ============ -->
+<div id="loginGate" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#0B1E3D] via-[#122C57] to-[#14509E] batik-pattern">
+  <div class="glass rounded-2xl p-8 w-[92%] max-w-sm shadow-2xl">
+    <div class="flex flex-col items-center mb-6">
+      <div class="w-16 h-16 rounded-full btn-gold flex items-center justify-center text-2xl font-display font-bold shadow-lg">TF</div>
+      <h1 class="font-display text-lg font-bold mt-3 text-center text-[var(--navy)]">SMK TAMAN FAJAR</h1>
+      <p class="text-xs text-[var(--ink-soft)]">Sistem Pengurusan Unit Beruniform</p>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs font-semibold text-[var(--ink-soft)]">E-mel</label>
+        <input id="loginEmail" type="email" value="admin@tamanfajar.edu.my" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white/80 text-sm">
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-[var(--ink-soft)]">Kata Laluan</label>
+        <input id="loginPass" type="password" value="••••••••" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white/80 text-sm">
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-[var(--ink-soft)]">Log Masuk Sebagai</label>
+        <select id="loginRole" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white/80 text-sm">
+          <option value="admin">Pentadbir (Admin)</option>
+          <option value="teacher">Guru</option>
+        </select>
+      </div>
+      <div class="flex items-center justify-between text-xs text-[var(--ink-soft)]">
+        <label class="flex items-center gap-1.5"><input type="checkbox" checked class="rounded"> Ingat Saya</label>
+        <a href="#" class="text-[var(--blue)] hover:underline">Lupa Kata Laluan?</a>
+      </div>
+      <button onclick="doLogin()" class="w-full py-2.5 rounded-lg btn-gold">Log Masuk</button>
+      <p class="text-[10px] text-center text-[var(--ink-soft)] pt-2 leading-relaxed">Sistem ini tersambung ke data langsung Google Sheets. Data akan dimuat apabila log masuk berjaya.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appShell" class="hidden flex min-h-screen">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-64 shrink-0 bg-gradient-to-b from-[#0B1E3D] to-[#122C57] text-white flex flex-col transition-all duration-300 fixed lg:static h-screen z-40 -translate-x-full lg:translate-x-0">
+    <div class="p-5 border-b border-white/10 batik-pattern">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full btn-gold flex items-center justify-center font-display font-bold text-sm shrink-0">TF</div>
+        <div class="min-w-0">
+          <p class="font-display font-bold text-sm leading-tight truncate">SMK TAMAN FAJAR</p>
+          <p class="text-[10px] text-white/60 truncate">Unit Beruniform</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 overflow-y-auto sidebar-scroll py-3 px-2 space-y-0.5 text-sm">
+      <!-- items injected by JS -->
+    </nav>
+    <div class="p-3 border-t border-white/10">
+      <button onclick="doLogout()" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg nav-item text-white/80 hover:text-white text-sm">
+        <span>🚪</span> Log Keluar
+      </button>
+    </div>
+  </aside>
+
+  <div id="overlayBg" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden"></div>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- TOPBAR -->
+    <header class="glass sticky top-0 z-20 flex items-center justify-between px-4 lg:px-6 py-3 border-b border-white/40">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden text-xl">☰</button>
+        <div>
+          <h1 id="pageTitle" class="font-display font-bold text-lg text-[var(--navy)]">Papan Pemuka</h1>
+          <p class="text-xs text-[var(--ink-soft)]" id="pageSubtitle">Sesi 2026</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:block text-right text-xs text-[var(--ink-soft)]">
+          <p id="clockDate" class="font-semibold text-[var(--ink)]"></p>
+          <p id="clockTime"></p>
+        </div>
+        <div class="w-9 h-9 rounded-full btn-navy flex items-center justify-center text-xs font-bold">AD</div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 lg:p-6 overflow-y-auto">
+
+      <!-- ===================== DASHBOARD ===================== -->
+      <section id="page-dashboard" class="section-page active">
+        <div class="rounded-2xl btn-navy batik-pattern p-6 mb-6 relative overflow-hidden">
+          <p class="eyebrow text-[var(--gold-light)]">Selamat Datang</p>
+          <h2 class="font-display text-2xl font-bold mt-1">Sistem Pengurusan Unit Beruniform</h2>
+          <p class="text-white/70 text-sm mt-1">SMK Taman Fajar · Sesi Persekolahan 2026</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold text-[var(--navy)]" id="stat-units">9</p><p class="text-xs text-[var(--ink-soft)] mt-1">Jumlah Unit Beruniform</p></div>
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold text-[var(--navy)]" id="stat-teachers">42</p><p class="text-xs text-[var(--ink-soft)] mt-1">Jumlah Guru</p></div>
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold text-[var(--navy)]" id="stat-students">1,284</p><p class="text-xs text-[var(--ink-soft)] mt-1">Jumlah Pelajar</p></div>
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold text-[var(--navy)]" id="stat-gender">592 / 692</p><p class="text-xs text-[var(--ink-soft)] mt-1">Lelaki / Perempuan</p></div>
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold" style="color:var(--gold)">94.2%</p><p class="text-xs text-[var(--ink-soft)] mt-1">Kehadiran Hari Ini</p></div>
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold text-[var(--navy)]">3</p><p class="text-xs text-[var(--ink-soft)] mt-1">Acara Akan Datang</p></div>
+          <div class="stat-card glass rounded-xl p-4"><p class="text-2xl font-display font-bold text-[var(--navy)]">128</p><p class="text-xs text-[var(--ink-soft)] mt-1">Pencapaian Direkod</p></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="glass rounded-xl p-4">
+            <p class="font-display font-semibold text-sm mb-2">Taburan Pelajar Mengikut Unit</p>
+            <canvas id="chartUnit" height="200"></canvas>
+          </div>
+          <div class="glass rounded-xl p-4">
+            <p class="font-display font-semibold text-sm mb-2">Lelaki vs Perempuan</p>
+            <canvas id="chartGender" height="200"></canvas>
+          </div>
+          <div class="glass rounded-xl p-4">
+            <p class="font-display font-semibold text-sm mb-2">Peratusan Kehadiran (7 Hari)</p>
+            <canvas id="chartAttendance" height="200"></canvas>
+          </div>
+          <div class="glass rounded-xl p-4">
+            <p class="font-display font-semibold text-sm mb-2">Aktiviti Bulanan</p>
+            <canvas id="chartActivities" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== TEACHERS ===================== -->
+      <section id="page-teachers" class="section-page">
+        <div class="glass rounded-xl p-4">
+          <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
+            <input id="teacherSearch" oninput="renderTeachers()" placeholder="Cari nama / ID staf..." class="px-3 py-2 rounded-lg border border-gray-200 text-sm w-64 bg-white/80">
+            <button onclick="openTeacherModal()" class="px-4 py-2 rounded-lg btn-gold text-sm">+ Tambah Guru</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-[var(--ink-soft)] border-b"><th class="py-2">Nama</th><th>ID Staf</th><th>Jawatan</th><th>Unit Ditugaskan</th><th>Telefon</th><th></th></tr></thead>
+              <tbody id="teacherTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== STUDENTS ===================== -->
+      <section id="page-students" class="section-page">
+        <div class="glass rounded-xl p-4">
+          <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
+            <div class="flex flex-wrap gap-2">
+              <input id="studentSearch" oninput="renderStudents()" placeholder="Cari nama / IC..." class="px-3 py-2 rounded-lg border border-gray-200 text-sm w-48 bg-white/80">
+              <select id="studentUnitFilter" onchange="renderStudents()" class="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white/80">
+                <option value="">Semua Unit</option>
+              </select>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="toast('Eksport Excel dimulakan (demo)')" class="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white/80">⬆ Eksport</button>
+              <button onclick="openStudentModal()" class="px-4 py-2 rounded-lg btn-gold text-sm">+ Tambah Pelajar</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto max-h-[60vh]">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-[var(--ink-soft)] border-b"><th class="py-2">Nama</th><th>Kelas</th><th>Jantina</th><th>Unit</th><th>Kehadiran</th><th></th></tr></thead>
+              <tbody id="studentTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== UNITS ===================== -->
+      <section id="page-units" class="section-page">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="unitsGrid"></div>
+
+        <div class="glass rounded-xl p-4 mt-6">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <p class="eyebrow">Sesi 2026</p>
+              <p class="font-display font-semibold text-[var(--navy)]">Jadual Perjumpaan Kokurikulum (12 Kali Setahun)</p>
+            </div>
+            <button onclick="toast('Eksport jadual perjumpaan (demo)')" class="px-3 py-2 rounded-lg border text-xs bg-white/80">⬇ Eksport</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-[var(--ink-soft)] border-b"><th class="py-2">Bil.</th><th>Tarikh</th><th>Fokus / Tema Perjumpaan</th><th>Status</th></tr></thead>
+              <tbody id="meetingsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ACTIVITIES ===================== -->
+      <section id="page-activities" class="section-page">
+        <div class="flex justify-end mb-4">
+          <button onclick="toast('Borang tambah aktiviti (demo)')" class="px-4 py-2 rounded-lg btn-gold text-sm">+ Tambah Aktiviti</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="activitiesGrid"></div>
+
+        <div class="mt-8">
+          <p class="eyebrow mb-1">Modul Aktiviti Mengikut Unit</p>
+          <p class="font-display font-semibold text-[var(--navy)] mb-3">Aktiviti Setiap Unit Beruniform</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="unitActivityGrid"></div>
+        </div>
+      </section>
+
+      <!-- ===================== ATTENDANCE ===================== -->
+      <section id="page-attendance" class="section-page">
+        <div class="glass rounded-xl p-4 mb-4 flex flex-wrap gap-3 items-center justify-between">
+          <div class="flex gap-2 text-sm">
+            <button class="px-3 py-1.5 rounded-lg btn-navy">Harian</button>
+            <button class="px-3 py-1.5 rounded-lg bg-white/70 border">Bulanan</button>
+            <button class="px-3 py-1.5 rounded-lg bg-white/70 border">Tahunan</button>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="toast('Eksport PDF (demo)')" class="px-3 py-2 rounded-lg border text-sm bg-white/80">PDF</button>
+            <button onclick="toast('Eksport Excel (demo)')" class="px-3 py-2 rounded-lg border text-sm bg-white/80">Excel</button>
+          </div>
+        </div>
+        <div class="glass rounded-xl p-4">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-[var(--ink-soft)] border-b"><th class="py-2">Nama Pelajar</th><th>Unit</th><th>Status</th></tr></thead>
+            <tbody id="attendanceTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===================== REPORTS ===================== -->
+      <section id="page-reports" class="section-page">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="glass rounded-xl p-5" onclick="toast('Menjana Laporan Kehadiran (demo)')" role="button">
+            <p class="text-2xl mb-2">📅</p><p class="font-semibold">Laporan Kehadiran</p><p class="text-xs text-[var(--ink-soft)] mt-1">Ringkasan kehadiran mengikut unit</p>
+          </div>
+          <div class="glass rounded-xl p-5" onclick="toast('Menjana Laporan Pelajar (demo)')" role="button">
+            <p class="text-2xl mb-2">🎓</p><p class="font-semibold">Laporan Pelajar</p><p class="text-xs text-[var(--ink-soft)] mt-1">Senarai penuh dan status pelajar</p>
+          </div>
+          <div class="glass rounded-xl p-5" onclick="toast('Menjana Laporan Guru (demo)')" role="button">
+            <p class="text-2xl mb-2">👩‍🏫</p><p class="font-semibold">Laporan Guru</p><p class="text-xs text-[var(--ink-soft)] mt-1">Penglibatan penasihat unit</p>
+          </div>
+          <div class="glass rounded-xl p-5" onclick="toast('Menjana Laporan Unit (demo)')" role="button">
+            <p class="text-2xl mb-2">🏅</p><p class="font-semibold">Laporan Unit</p><p class="text-xs text-[var(--ink-soft)] mt-1">Prestasi setiap unit beruniform</p>
+          </div>
+          <div class="glass rounded-xl p-5" onclick="toast('Menjana Laporan Pencapaian (demo)')" role="button">
+            <p class="text-2xl mb-2">🏆</p><p class="font-semibold">Laporan Pencapaian</p><p class="text-xs text-[var(--ink-soft)] mt-1">Anugerah dan pingat pelajar</p>
+          </div>
+          <div class="glass rounded-xl p-5" onclick="toast('Menjana Laporan Tahunan (demo)')" role="button">
+            <p class="text-2xl mb-2">📘</p><p class="font-semibold">Laporan Tahunan</p><p class="text-xs text-[var(--ink-soft)] mt-1">Ringkasan keseluruhan sesi</p>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- ===================== ANNOUNCEMENTS ===================== -->
+      <section id="page-announcements" class="section-page">
+        <div class="flex justify-end mb-4">
+          <button onclick="toast('Pengumuman baharu (demo)')" class="px-4 py-2 rounded-lg btn-gold text-sm">+ Pengumuman Baharu</button>
+        </div>
+        <div class="space-y-3" id="announcementsList"></div>
+      </section>
+
+      <!-- ===================== GALLERY ===================== -->
+      <section id="page-gallery" class="section-page">
+        <div class="flex justify-end mb-4">
+          <button onclick="toast('Muat naik imej/video (demo)')" class="px-4 py-2 rounded-lg btn-gold text-sm">⬆ Muat Naik</button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="galleryGrid"></div>
+      </section>
+
+      <!-- ===================== DOWNLOADS ===================== -->
+      <section id="page-downloads" class="section-page">
+        <div class="glass rounded-xl divide-y divide-gray-200" id="downloadsList"></div>
+      </section>
+
+      <!-- ===================== SETTINGS ===================== -->
+      <section id="page-settings" class="section-page">
+        <div class="glass rounded-xl p-6 max-w-xl space-y-4">
+          <div><label class="text-xs font-semibold text-[var(--ink-soft)]">Nama Sekolah</label><input value="SMK Taman Fajar" class="w-full mt-1 px-3 py-2 rounded-lg border bg-white/80 text-sm"></div>
+          <div><label class="text-xs font-semibold text-[var(--ink-soft)]">Tahun Akademik</label><input value="2026" class="w-full mt-1 px-3 py-2 rounded-lg border bg-white/80 text-sm"></div>
+          <div><label class="text-xs font-semibold text-[var(--ink-soft)]">Sesi</label><input value="2026" class="w-full mt-1 px-3 py-2 rounded-lg border bg-white/80 text-sm"></div>
+          <div class="flex gap-3">
+            <button onclick="toast('Sandaran data dimulakan (demo)')" class="px-4 py-2 rounded-lg border bg-white/80 text-sm">💾 Sandaran Pangkalan Data</button>
+            <button onclick="toast('Pemulihan data dimulakan (demo)')" class="px-4 py-2 rounded-lg border bg-white/80 text-sm">♻ Pulihkan Data</button>
+          </div>
+          <button onclick="toast('Tetapan disimpan (demo)')" class="px-5 py-2.5 rounded-lg btn-gold">Simpan Tetapan</button>
+        </div>
+      </section>
+
+      <!-- ===================== ADMIN PANEL ===================== -->
+      <section id="page-admin" class="section-page">
+        <div class="glass rounded-xl p-4 mb-4">
+          <p class="text-xs text-[var(--ink-soft)]">Panel ini hanya untuk pentadbir yang log masuk. Log aktiviti di bawah adalah data demo.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="glass rounded-xl p-4">
+            <p class="font-semibold text-sm mb-2">Log Aktiviti</p>
+            <ul class="text-xs space-y-2 text-[var(--ink-soft)]" id="activityLogList"></ul>
+          </div>
+          <div class="glass rounded-xl p-4">
+            <p class="font-semibold text-sm mb-2">Pengurusan Pengguna</p>
+            <table class="w-full text-xs">
+              <thead><tr class="text-left border-b text-[var(--ink-soft)]"><th class="py-1.5">Nama</th><th>Peranan</th><th>Status</th></tr></thead>
+              <tbody id="userMgmtBody"></tbody>
+            </table>
+          </div>
+
+          <div id="moduleMgmtCard" class="glass rounded-xl p-4 lg:col-span-2">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2">
+                <p class="font-semibold text-sm">Pengurusan Modul</p>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-700">🔒 Admin Sahaja</span>
+              </div>
+              <button onclick="toast('Tambah modul baharu (demo — admin sahaja)')" class="px-3 py-1.5 rounded-lg btn-gold text-xs">+ Tambah Modul</button>
+            </div>
+            <p class="text-xs text-[var(--ink-soft)] mb-3">Senarai modul yang dipaparkan pada bar sisi. Hanya pentadbir boleh mengaktifkan/menyahaktifkan, menyusun semula, atau menyunting modul di sini.</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead><tr class="text-left border-b text-[var(--ink-soft)]"><th class="py-1.5">Ikon</th><th>Nama Modul</th><th>Status</th><th class="text-right">Tindakan</th></tr></thead>
+                <tbody id="moduleMgmtBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ GENERIC MODAL ============ -->
+<div id="modalOverlay" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+  <div class="glass rounded-2xl p-6 w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 id="modalTitle" class="font-display font-bold text-[var(--navy)]">Tambah</h3>
+      <button onclick="closeModal()" class="text-xl leading-none">&times;</button>
+    </div>
+    <div id="modalBody" class="space-y-3"></div>
+    <button onclick="closeModal(); toast('Data disimpan (demo)')" class="w-full mt-4 py-2.5 rounded-lg btn-gold">Simpan</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer" class="fixed bottom-5 right-5 z-[60] space-y-2"></div>
+
+<script>
+/* ============ GOOGLE SHEETS INTEGRATION ============ */
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby0fMeLETfh7kRqcvXyCrQyxhRcRCVz9dxRhbp9btKlUIrW1ajGHz9_StEKxDJH-UX5Ig/exec';
+let DATA_LOADED = false;
+
+// Fetch data from Google Apps Script
+async function fetchGoogleSheetData(action) {
+  try {
+    const response = await fetch(GAS_ENDPOINT + '?action=' + action);
+    const data = await response.json();
+    return data;
+  } catch(e) {
+    console.error('Sheet fetch error:', e);
+    console.log('Menggunakan data demo sebagai fallback');
+    return null;
+  }
+}
+
+// Load all data from Google Sheets
+async function loadLiveData() {
+  try {
+    toast('⏳ Memuatkan data langsung...');
+    
+    const [teachersData, studentsData, unitsData] = await Promise.all([
+      fetchGoogleSheetData('getTeachers'),
+      fetchGoogleSheetData('getStudents'),
+      fetchGoogleSheetData('getUnits')
+    ]);
+    
+    if(teachersData && Array.isArray(teachersData)) {
+      TEACHERS = teachersData;
+      console.log('✅ Data guru dimuat:', TEACHERS.length, 'rekod');
+    }
+    
+    if(studentsData && Array.isArray(studentsData)) {
+      STUDENTS = studentsData;
+      console.log('✅ Data pelajar dimuat:', STUDENTS.length, 'rekod');
+    }
+    
+    if(unitsData && Array.isArray(unitsData)) {
+      UNITS = unitsData;
+      console.log('✅ Data unit dimuat:', UNITS.length, 'rekod');
+    }
+    
+    DATA_LOADED = true;
+    
+    // Refresh all views
+    renderTeachers();
+    renderStudents();
+    buildUnitsGrid();
+    buildAttendance();
+    updateDashboardStats();
+    buildCharts();
+    
+    toast('✅ Data langsung berhasil dimuat');
+  } catch(e) {
+    console.error('Error loading data:', e);
+    toast('⚠️ Gagal memuatkan data langsung, menggunakan data demo');
+  }
+}
+
+// Update dashboard stats based on current data
+function updateDashboardStats() {
+  document.getElementById('stat-units').textContent = UNITS.length;
+  document.getElementById('stat-teachers').textContent = TEACHERS.length;
+  document.getElementById('stat-students').textContent = STUDENTS.length;
+  
+  const maleCount = STUDENTS.filter(s => s.gender === 'Lelaki').length;
+  const femaleCount = STUDENTS.filter(s => s.gender === 'Perempuan').length;
+  document.getElementById('stat-gender').textContent = maleCount + ' / ' + femaleCount;
+}
+
+/* ============ MOCK DATA (Fallback) ============ */
+const DEFAULT_UNITS = [
+  {name:"Kadet Remaja Sekolah", advisor:"En. Zulkifli Osman", asst:"Pn. Farah Aini", schedule:"Sabtu, 8:00 pagi", students:148},
+  {name:"Bulan Sabit Merah Malaysia", advisor:"Pn. Noraini Yusof", asst:"En. Hafiz Rahman", schedule:"Rabu, 3:00 ptg", students:132},
+  {name:"Pengakap", advisor:"En. Amirul Hakim", asst:"Pn. Siti Aisyah", schedule:"Sabtu, 8:00 pagi", students:156},
+  {name:"Puteri Islam", advisor:"Pn. Rohana Ibrahim", asst:"Pn. Nurul Huda", schedule:"Khamis, 3:00 ptg", students:121},
+  {name:"Pandu Puteri", advisor:"Pn. Salmah Ahmad", asst:"Pn. Fatimah Zahra", schedule:"Sabtu, 8:00 pagi", students:118},
+  {name:"St John Ambulance", advisor:"En. Vincent Chong", asst:"Pn. Grace Lim", schedule:"Rabu, 3:00 ptg", students:97},
+  {name:"Kadet Polis", advisor:"En. Rosli Mat Zain", asst:"Pn. Aminah Kassim", schedule:"Sabtu, 8:00 pagi", students:143},
+  {name:"Kadet Bomba", advisor:"En. Faizal Ramli", asst:"En. Azman Yusuf", schedule:"Khamis, 3:00 ptg", students:126},
+  {name:"Kadet Pertahanan Awam", advisor:"En. Suhaimi Talib", asst:"Pn. Zaharah Musa", schedule:"Sabtu, 8:00 pagi", students:109},
+];
+
+let DEFAULT_TEACHERS = [
+  {name:"Zulkifli Osman", id:"GR-0231", pos:"Guru Penasihat", unit:"Kadet Remaja Sekolah", phone:"019-8801234"},
+  {name:"Noraini Yusof", id:"GR-0187", pos:"Guru Penasihat", unit:"Bulan Sabit Merah Malaysia", phone:"013-7702345"},
+  {name:"Amirul Hakim", id:"GR-0299", pos:"Guru Penasihat", unit:"Pengakap", phone:"016-5503456"},
+  {name:"Rohana Ibrahim", id:"GR-0145", pos:"Guru Penasihat", unit:"Puteri Islam", phone:"011-2204567"},
+  {name:"Vincent Chong", id:"GR-0312", pos:"Guru Penasihat", unit:"St John Ambulance", phone:"012-9905678"},
+];
+
+let DEFAULT_STUDENTS = [
+  {name:"Ahmad Bin Ismail", class:"4 Cemerlang", gender:"Lelaki", unit:"Pengakap", attendance:"96%"},
+  {name:"Siti Nurhaliza Abdullah", class:"3 Bestari", gender:"Perempuan", unit:"Puteri Islam", attendance:"98%"},
+  {name:"Tan Wei Ming", class:"5 Amanah", gender:"Lelaki", unit:"St John Ambulance", attendance:"91%"},
+  {name:"Nur Aisyah Rahman", class:"2 Setia", gender:"Perempuan", unit:"Pandu Puteri", attendance:"94%"},
+  {name:"Muhammad Haziq", class:"4 Cemerlang", gender:"Lelaki", unit:"Kadet Remaja Sekolah", attendance:"89%"},
+  {name:"Chong Mei Ling", class:"1 Bijak", gender:"Perempuan", unit:"Bulan Sabit Merah Malaysia", attendance:"97%"},
+  {name:"Rosli Bin Awang", class:"5 Amanah", gender:"Lelaki", unit:"Kadet Polis", attendance:"85%"},
+  {name:"Farah Adilla", class:"3 Bestari", gender:"Perempuan", unit:"Puteri Islam", attendance:"93%"},
+];
+
+let UNITS = [...DEFAULT_UNITS];
+let TEACHERS = [...DEFAULT_TEACHERS];
+let STUDENTS = [...DEFAULT_STUDENTS];
+
+const KOKURIKULUM_MEETINGS = [
+  {no:1,  date:"17 Jan 2026", theme:"Taklimat & Pendaftaran Ahli Baharu", status:"Selesai"},
+  {no:2,  date:"31 Jan 2026", theme:"Latihan Asas Perbarisan", status:"Selesai"},
+  {no:3,  date:"14 Feb 2026", theme:"Ikrar & Pemakaian Uniform Lengkap", status:"Selesai"},
+  {no:4,  date:"28 Feb 2026", theme:"Kemahiran Asas Unit Masing-Masing", status:"Selesai"},
+  {no:5,  date:"14 Mac 2026", theme:"Ujian Kecergasan Fizikal", status:"Selesai"},
+  {no:6,  date:"28 Mac 2026", theme:"Gotong-Royong & Khidmat Masyarakat", status:"Selesai"},
+  {no:7,  date:"18 Apr 2026", theme:"Latihan Pertolongan Cemas", status:"Selesai"},
+  {no:8,  date:"2 Mei 2026", theme:"Kemahiran Kepimpinan & Kerja Berpasukan", status:"Selesai"},
+  {no:9,  date:"16 Mei 2026", theme:"Persediaan Perkhemahan", status:"Akan Datang"},
+  {no:10, date:"18 Jul 2026", theme:"Perkhemahan Perdana / Aktiviti Luar", status:"Akan Datang"},
+  {no:11, date:"1 Ogo 2026", theme:"Penilaian Lencana & Pencapaian", status:"Akan Datang"},
+  {no:12, date:"15 Ogo 2026", theme:"Perbarisan Penutup & Anugerah Tahunan", status:"Akan Datang"},
+];
+
+const UNIT_ACTIVITY_MODULES = [
+  {name:"Kadet Remaja Sekolah (KRS)", icon:"🎖️", activities:[
+    {title:"Latihan Perbarisan Mingguan", date:"Setiap Sabtu", status:"Aktif"},
+    {title:"Kem Kepimpinan KRS Daerah", date:"9 Ogo 2026", status:"Akan Datang"},
+  ]},
+  {name:"Kadet Polis", icon:"👮", activities:[
+    {title:"Ceramah Pencegahan Jenayah", date:"25 Jul 2026", status:"Akan Datang"},
+    {title:"Latihan Fizikal Bulanan", date:"Setiap Sabtu", status:"Aktif"},
+  ]},
+  {name:"Pengakap", icon:"🏕️", activities:[
+    {title:"Perkhemahan Perdana Pengakap 2026", date:"22 Ogo 2026", status:"Akan Datang"},
+    {title:"Ekspedisi Bukit Sandakan", date:"15 Jul 2026", status:"Selesai"},
+  ]},
+  {name:"Pandu Puteri", icon:"🎗️", activities:[
+    {title:"Lawatan Sambil Belajar", date:"5 Ogo 2026", status:"Akan Datang"},
+    {title:"Aktiviti Khidmat Masyarakat", date:"28 Mac 2026", status:"Selesai"},
+  ]},
+  {name:"St John Ambulans Malaysia", icon:"🚑", activities:[
+    {title:"Kursus Asas Pertolongan Cemas", date:"3 Ogo 2026", status:"Aktif"},
+    {title:"Simulasi Kecemasan Sekolah", date:"20 Sep 2026", status:"Akan Datang"},
+  ]},
+  {name:"Bulan Sabit Merah Malaysia", icon:"🩸", activities:[
+    {title:"Kempen Derma Darah Sekolah", date:"14 Ogo 2026", status:"Akan Datang"},
+    {title:"Bengkel Kesihatan & Kebersihan", date:"9 Jun 2026", status:"Selesai"},
+  ]},
+  {name:"Pergerakan Puteri Islam Malaysia", icon:"🕌", activities:[
+    {title:"Hari Puteri Islam", date:"29 Jul 2026", status:"Akan Datang"},
+    {title:"Kelas Tadarus & Tazkirah", date:"Setiap Khamis", status:"Aktif"},
+  ]},
+];
+
+const ACTIVITIES = [
+  {name:"Perkhemahan Perdana Pengakap 2026", date:"22 Ogo 2026", venue:"Padang Sekolah", teacher:"En. Amirul Hakim", status:"Akan Datang"},
+  {name:"Kursus Asas Pertolongan Cemas", date:"3 Ogo 2026", venue:"Dewan Sekolah", teacher:"En. Vincent Chong", status:"Aktif"},
+  {name:"Ekspedisi Bukit Sandakan", date:"15 Jul 2026", venue:"Bukit Sandakan", teacher:"En. Zulkifli Osman", status:"Selesai"},
+  {name:"Hari Puteri Islam", date:"29 Jul 2026", venue:"Dewan Sekolah", teacher:"Pn. Rohana Ibrahim", status:"Akan Datang"},
+  {name:"Sukan Tahunan Unit Beruniform", date:"12 Sep 2026", venue:"Padang Sekolah", teacher:"En. Rosli Mat Zain", status:"Akan Datang"},
+];
+
+const ANNOUNCEMENTS = [
+  {title:"Mesyuarat Agung Unit Beruniform 2026", date:"18 Jul 2026", priority:"Tinggi", desc:"Semua penasihat unit dijemput hadir mesyuarat agung tahunan di Dewan Sekolah."},
+  {title:"Pendaftaran Ahli Baharu Sesi 2026/2027", date:"20 Jul 2026", priority:"Sederhana", desc:"Pendaftaran ahli baharu unit beruniform dibuka bermula minggu depan."},
+  {title:"Pemakaian Uniform Lengkap Setiap Sabtu", date:"14 Jul 2026", priority:"Rendah", desc:"Semua ahli diwajibkan memakai uniform lengkap unit masing-masing."},
+];
+
+const DOWNLOADS = [
+  {name:"Minit Mesyuarat Jun 2026.pdf", type:"PDF"},
+  {name:"Pelan Tahunan Unit Beruniform 2026.docx", type:"Word"},
+  {name:"Borang Pendaftaran Ahli Baharu.pdf", type:"PDF"},
+  {name:"Senarai Semak Peralatan Perkhemahan.xlsx", type:"Excel"},
+];
+
+const MENU = [
+  {id:"dashboard", label:"Papan Pemuka", icon:"📊", enabled:true, locked:true},
+  {id:"teachers", label:"Pengurusan Guru", icon:"👩‍🏫", enabled:true},
+  {id:"students", label:"Pengurusan Pelajar", icon:"🎓", enabled:true},
+  {id:"units", label:"Unit Beruniform", icon:"🎖️", enabled:true},
+  {id:"activities", label:"Modul Aktiviti", icon:"🏕️", enabled:true},
+  {id:"attendance", label:"Kehadiran", icon:"✅", enabled:true},
+  {id:"reports", label:"Laporan", icon:"📄", enabled:true},
+  {id:"announcements", label:"Pengumuman", icon:"📢", enabled:true},
+  {id:"gallery", label:"Galeri", icon:"🖼️", enabled:true},
+  {id:"downloads", label:"Muat Turun", icon:"📁", enabled:true},
+  {id:"settings", label:"Tetapan", icon:"⚙️", enabled:true},
+  {id:"admin", label:"Panel Admin", icon:"🔐", enabled:true, locked:true},
+];
+
+let CURRENT_ROLE = "admin";
+function isAdminUser(){ return CURRENT_ROLE === "admin"; }
+
+const PAGE_META = {
+  dashboard:["Papan Pemuka","Sesi 2026"], teachers:["Pengurusan Guru","Senarai dan maklumat guru penasihat"],
+  students:["Pengurusan Pelajar","Senarai dan maklumat pelajar unit beruniform"], units:["Unit Beruniform","9 unit aktif"],
+  activities:["Modul Aktiviti","Pengurusan aktiviti dan program"], attendance:["Kehadiran","Rekod kehadiran harian"],
+  reports:["Laporan","Jana laporan automatik"],
+  announcements:["Pengumuman","Makluman terkini sekolah"], gallery:["Galeri","Imej dan video aktiviti"],
+  downloads:["Muat Turun","Fail dan dokumen rasmi"], settings:["Tetapan","Konfigurasi sistem"],
+  admin:["Panel Admin","Akses terhad — pentadbir sahaja"],
+};
+
+/* ============ INIT ============ */
+function doLogin(){
+  CURRENT_ROLE = document.getElementById('loginRole').value === 'teacher' ? 'teacher' : 'admin';
+  document.getElementById('loginGate').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  document.getElementById('appShell').classList.add('flex');
+  buildModuleMgmt();
+  buildSidebar();
+  loadLiveData(); // Load data from Google Sheets
+}
+
+function doLogout(){
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginGate').classList.remove('hidden');
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+  document.getElementById('overlayBg').classList.toggle('hidden');
+}
+
+function toast(msg){
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast glass rounded-lg px-4 py-3 text-sm shadow-lg border-l-4';
+  el.style.borderLeftColor = 'var(--gold)';
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(), 3000);
+}
+
+let CURRENT_PAGE = 'dashboard';
+function showPage(id){
+  CURRENT_PAGE = id;
+  document.querySelectorAll('.section-page').forEach(s=>s.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-'+id).classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_META[id][0];
+  document.getElementById('pageSubtitle').textContent = PAGE_META[id][1];
+  if(window.innerWidth < 1024){ document.getElementById('sidebar').classList.add('-translate-x-full'); document.getElementById('overlayBg').classList.add('hidden'); }
+}
+
+function buildSidebar(){
+  const nav = document.querySelector('#sidebar nav');
+  nav.innerHTML = MENU.filter(m=>m.enabled).map(m=>`
+    <button id="nav-${m.id}" onclick="showPage('${m.id}')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/85 hover:text-white text-left">
+      <span class="text-base">${m.icon}</span><span>${m.label}</span>
+    </button>`).join('');
+  const activeStillVisible = document.getElementById('nav-'+CURRENT_PAGE);
+  if(activeStillVisible){ activeStillVisible.classList.add('active'); }
+  else { CURRENT_PAGE = 'dashboard'; document.getElementById('nav-dashboard').classList.add('active'); }
+}
+
+function toggleModule(id){
+  if(!isAdminUser()){ toast('Hanya admin boleh kemaskini senarai modul'); return; }
+  const m = MENU.find(x=>x.id===id);
+  if(m.locked){ toast('Modul teras ini tidak boleh dinyahaktifkan'); return; }
+  m.enabled = !m.enabled;
+  buildSidebar();
+  buildModuleMgmt();
+  if(!m.enabled && CURRENT_PAGE===id){ showPage('dashboard'); }
+  toast(`${m.label} ${m.enabled ? 'diaktifkan' : 'dinyahaktifkan'}`);
+}
+
+function buildModuleMgmt(){
+  const admin = isAdminUser();
+  const card = document.getElementById('moduleMgmtCard');
+  if(!admin){ card.classList.add('hidden'); return; }
+  card.classList.remove('hidden');
+  document.getElementById('moduleMgmtBody').innerHTML = MENU.map(m=>`
+    <tr class="border-b border-gray-50">
+      <td class="py-1.5 text-base">${m.icon}</td>
+      <td>${m.label}${m.locked ? ' <span class="text-[9px] text-[var(--ink-soft)]">(teras)</span>' : ''}</td>
+      <td>
+        <label class="inline-flex items-center cursor-pointer ${!admin || m.locked ? 'opacity-50 cursor-not-allowed' : ''}">
+          <input type="checkbox" ${m.enabled?'checked':''} ${(!admin||m.locked)?'disabled':''} onchange="toggleModule('${m.id}')" class="sr-only peer">
+          <span class="w-8 h-4 rounded-full relative transition-colors ${m.enabled ? 'bg-[var(--gold)]' : 'bg-gray-300'}">
+            <span class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${m.enabled ? 'translate-x-4' : ''}"></span>
+          </span>
+        </label>
+      </td>
+      <td class="text-right">
+        <button onclick="${admin ? `toast('Sunting ${m.label} (demo)')` : `toast('Hanya admin boleh kemaskini senarai modul')`}" class="text-[var(--blue)] text-xs mr-2">Sunting</button>
+        <button onclick="${admin && !m.locked ? `toast('Padam ${m.label} (demo)')` : `toast('Hanya admin boleh kemaskini senarai modul')`}" class="text-red-500 text-xs">Padam</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderTeachers(){
+  const q = (document.getElementById('teacherSearch').value||'').toLowerCase();
+  const rows = TEACHERS.filter(t=> t.name.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
+  document.getElementById('teacherTableBody').innerHTML = rows.map(t=>`
+    <tr class="border-b border-gray-100 hover:bg-white/60">
+      <td class="py-2.5 font-medium">${t.name}</td><td>${t.id}</td><td>${t.pos}</td><td>${t.unit}</td><td>${t.phone}</td>
+      <td class="text-right"><button onclick="toast('Edit ${t.name} (demo)')" class="text-[var(--blue)] text-xs mr-2">Sunting</button><button onclick="toast('Padam ${t.name} (demo)')" class="text-red-500 text-xs">Padam</button></td>
+    </tr>`).join('') || `<tr><td colspan="6" class="py-6 text-center text-[var(--ink-soft)]">Tiada rekod dijumpai</td></tr>`;
+}
+
+function renderStudents(){
+  const q = (document.getElementById('studentSearch').value||'').toLowerCase();
+  const unitF = document.getElementById('studentUnitFilter').value;
+  const rows = STUDENTS.filter(s => s.name.toLowerCase().includes(q) && (!unitF || s.unit===unitF));
+  document.getElementById('studentTableBody').innerHTML = rows.map(s=>`
+    <tr class="border-b border-gray-100 hover:bg-white/60">
+      <td class="py-2.5 font-medium">${s.name}</td><td>${s.class}</td><td>${s.gender}</td><td>${s.unit}</td><td>${s.attendance}</td>
+      <td class="text-right"><button onclick="toast('Edit ${s.name} (demo)')" class="text-[var(--blue)] text-xs mr-2">Sunting</button><button onclick="toast('Padam ${s.name} (demo)')" class="text-red-500 text-xs">Padam</button></td>
+    </tr>`).join('') || `<tr><td colspan="6" class="py-6 text-center text-[var(--ink-soft)]">Tiada rekod dijumpai</td></tr>`;
+}
+
+function buildUnitsGrid(){
+  document.getElementById('unitsGrid').innerHTML = UNITS.map(u=>`
+    <div class="glass rounded-xl p-4">
+      <div class="flex items-start justify-between">
+        <div><p class="font-display font-semibold text-[var(--navy)]">${u.name}</p><p class="text-xs text-[var(--ink-soft)] mt-0.5">${u.schedule}</p></div>
+        <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:var(--gold-light); color:#402f04;">${u.students} pelajar</span>
+      </div>
+      <div class="mt-3 text-xs text-[var(--ink-soft)] space-y-1">
+        <p>👤 Penasihat: <span class="text-[var(--ink)] font-medium">${u.advisor}</span></p>
+        <p>👤 Pembantu: <span class="text-[var(--ink)] font-medium">${u.asst}</span></p>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="toast('Membuka profil ${u.name} (demo)')" class="flex-1 py-1.5 rounded-lg btn-navy text-xs">Lihat Profil</button>
+        <button onclick="toast('Laporan tahunan ${u.name} (demo)')" class="flex-1 py-1.5 rounded-lg border text-xs bg-white/70">Laporan</button>
+      </div>
+    </div>`).join('');
+  const sel = document.getElementById('studentUnitFilter');
+  sel.innerHTML = '<option value="">Semua Unit</option>' + UNITS.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+}
+
+function buildMeetings(){
+  const badge = s => s==='Selesai' ? 'bg-gray-200 text-gray-600' : 'bg-amber-100 text-amber-700';
+  document.getElementById('meetingsTableBody').innerHTML = KOKURIKULUM_MEETINGS.map(m=>`
+    <tr class="border-b border-gray-100 hover:bg-white/60">
+      <td class="py-2.5">${m.no}</td><td>${m.date}</td><td>${m.theme}</td>
+      <td><span class="text-[10px] px-2 py-1 rounded-full font-semibold ${badge(m.status)}">${m.status}</span></td>
+    </tr>`).join('');
+}
+
+function buildActivities(){
+  const badge = s => s==='Aktif' ? 'bg-green-100 text-green-700' : s==='Akan Datang' ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-600';
+  document.getElementById('activitiesGrid').innerHTML = ACTIVITIES.map(a=>`
+    <div class="glass rounded-xl p-4">
+      <div class="flex justify-between items-start">
+        <p class="font-semibold text-sm">${a.name}</p>
+        <span class="text-[10px] px-2 py-1 rounded-full font-semibold ${badge(a.status)}">${a.status}</span>
+      </div>
+      <p class="text-xs text-[var(--ink-soft)] mt-2">📅 ${a.date} &nbsp;·&nbsp; 📍 ${a.venue}</p>
+      <p class="text-xs text-[var(--ink-soft)]">👤 ${a.teacher}</p>
+    </div>`).join('');
+}
+
+function buildUnitActivities(){
+  const badge = s => s==='Aktif' ? 'bg-green-100 text-green-700' : s==='Akan Datang' ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-600';
+  document.getElementById('unitActivityGrid').innerHTML = UNIT_ACTIVITY_MODULES.map(u=>`
+    <div class="glass rounded-xl p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">${u.icon}</span>
+        <p class="font-display font-semibold text-sm text-[var(--navy)]">${u.name}</p>
+      </div>
+      <div class="space-y-2">
+        ${u.activities.map(a=>`
+          <div class="flex items-center justify-between gap-2 text-xs bg-white/60 rounded-lg px-3 py-2">
+            <div><p class="font-medium">${a.title}</p><p class="text-[var(--ink-soft)]">${a.date}</p></div>
+            <span class="text-[10px] px-2 py-1 rounded-full font-semibold shrink-0 ${badge(a.status)}">${a.status}</span>
+          </div>`).join('')}
+      </div>
+      <button onclick="toast('Membuka semua aktiviti ${u.name} (demo)')" class="w-full mt-3 py-1.5 rounded-lg border text-xs bg-white/70">Lihat Semua Aktiviti</button>
+    </div>`).join('');
+}
+
+function buildAttendance(){
+  document.getElementById('attendanceTableBody').innerHTML = STUDENTS.map((s,i)=>`
+    <tr class="border-b border-gray-100">
+      <td class="py-2.5">${s.name}</td><td>${s.unit}</td>
+      <td><label class="inline-flex items-center gap-2 text-xs"><input type="checkbox" ${i%6!==0?'checked':''} class="rounded"> ${i%6!==0?'Hadir':'Tidak Hadir'}</label></td>
+    </tr>`).join('');
+}
+
+function buildAnnouncements(){
+  const badge = p => p==='Tinggi' ? 'bg-red-100 text-red-700' : p==='Sederhana' ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-600';
+  document.getElementById('announcementsList').innerHTML = ANNOUNCEMENTS.map(a=>`
+    <div class="glass rounded-xl p-4 flex justify-between items-start gap-4">
+      <div>
+        <div class="flex items-center gap-2"><p class="font-semibold text-sm">${a.title}</p><span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${badge(a.priority)}">${a.priority}</span></div>
+        <p class="text-xs text-[var(--ink-soft)] mt-1">${a.desc}</p>
+        <p class="text-[10px] text-[var(--ink-soft)] mt-2">${a.date}</p>
+      </div>
+      <div class="flex gap-2 shrink-0"><button onclick="toast('Sunting pengumuman (demo)')" class="text-xs text-[var(--blue)]">Sunting</button><button onclick="toast('Padam pengumuman (demo)')" class="text-xs text-red-500">Padam</button></div>
+    </div>`).join('');
+}
+
+function buildGallery(){
+  const colors=['#14509E','#C9A227','#0B1E3D','#3B82C4'];
+  document.getElementById('galleryGrid').innerHTML = Array.from({length:8}).map((_,i)=>`
+    <div onclick="toast('Pratonton imej (demo)')" class="glass rounded-xl aspect-square flex items-center justify-center cursor-pointer" style="background:linear-gradient(135deg, ${colors[i%4]}22, ${colors[(i+1)%4]}22);">
+      <span class="text-3xl">🖼️</span>
+    </div>`).join('');
+}
+
+function buildDownloads(){
+  const icon = t => t==='PDF'?'📕':t==='Word'?'📘':'📗';
+  document.getElementById('downloadsList').innerHTML = DOWNLOADS.map(d=>`
+    <div class="flex items-center justify-between px-4 py-3 hover:bg-white/60">
+      <div class="flex items-center gap-3 text-sm"><span class="text-lg">${icon(d.type)}</span><span>${d.name}</span></div>
+      <button onclick="toast('Memuat turun ${d.name} (demo)')" class="text-xs text-[var(--blue)] font-medium">⬇ Muat Turun</button>
+    </div>`).join('');
+}
+
+function buildAdmin(){
+  document.getElementById('activityLogList').innerHTML = [
+    "Admin log masuk — 14 Jul 2026, 08:12",
+    "Pn. Rohana mengemaskini rekod pelajar Puteri Islam — 13 Jul 2026",
+    "En. Vincent menambah aktiviti baharu — 12 Jul 2026",
+    "Sandaran pangkalan data automatik — 12 Jul 2026, 00:00",
+  ].map(l=>`<li class="pb-2 border-b border-gray-100">${l}</li>`).join('');
+  document.getElementById('userMgmtBody').innerHTML = [
+    ["Admin Utama","Pentadbir","Aktif"],["En. Zulkifli Osman","Guru","Aktif"],["Pn. Noraini Yusof","Guru","Aktif"],["Ahmad Bin Ismail","Pelajar","Aktif"],
+  ].map(u=>`<tr class="border-b border-gray-50"><td class="py-1.5">${u[0]}</td><td>${u[1]}</td><td class="text-green-600">${u[2]}</td></tr>`).join('');
+}
+
+function openTeacherModal(){
+  document.getElementById('modalTitle').textContent = 'Tambah Guru';
+  document.getElementById('modalBody').innerHTML = `
+    <input placeholder="Nama Penuh" class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">
+    <input placeholder="ID Staf" class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">
+    <input placeholder="Telefon" class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">
+    <select class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">${UNITS.map(u=>`<option>${u.name}</option>`).join('')}</select>`;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+  document.getElementById('modalOverlay').classList.add('flex');
+}
+
+function openStudentModal(){
+  document.getElementById('modalTitle').textContent = 'Tambah Pelajar';
+  document.getElementById('modalBody').innerHTML = `
+    <input placeholder="Nama Penuh" class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">
+    <input placeholder="No. IC / MyKid" class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">
+    <input placeholder="Kelas" class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">
+    <select class="w-full px-3 py-2 rounded-lg border bg-white/80 text-sm">${UNITS.map(u=>`<option>${u.name}</option>`).join('')}</select>`;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+  document.getElementById('modalOverlay').classList.add('flex');
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.add('hidden');
+  document.getElementById('modalOverlay').classList.remove('flex');
+}
+
+/* ============ CLOCK ============ */
+function updateClock(){
+  const now = new Date();
+  const days=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+  const months=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
+  document.getElementById('clockDate').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('clockTime').textContent = now.toLocaleTimeString('ms-MY');
+}
+
+/* ============ CHARTS ============ */
+function buildCharts(){
+  const goldish = ['#14509E','#3B82C4','#C9A227','#E8D48A','#0B1E3D','#7BA7D9','#B8860B','#5B6B87','#8FA8C7'];
+  new Chart(document.getElementById('chartUnit'), {
+    type:'doughnut',
+    data:{ labels:UNITS.map(u=>u.name), datasets:[{ data:UNITS.map(u=>u.students), backgroundColor:goldish }] },
+    options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}} }
+  });
+  new Chart(document.getElementById('chartGender'), {
+    type:'bar',
+    data:{ labels:['Pelajar'], datasets:[
+      {label:'Lelaki', data:[STUDENTS.filter(s => s.gender === 'Lelaki').length], backgroundColor:'#14509E'},
+      {label:'Perempuan', data:[STUDENTS.filter(s => s.gender === 'Perempuan').length], backgroundColor:'#C9A227'} ]},
+    options:{ scales:{y:{beginAtZero:true}}, plugins:{legend:{position:'bottom'}} }
+  });
+  new Chart(document.getElementById('chartAttendance'), {
+    type:'line',
+    data:{ labels:['Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu','Ahad'],
+      datasets:[{label:'Kehadiran %', data:[92,94,91,96,95,97,0], borderColor:'#C9A227', backgroundColor:'rgba(201,162,39,0.15)', fill:true, tension:.35}] },
+    options:{ scales:{y:{min:0,max:100}} }
+  });
+  new Chart(document.getElementById('chartActivities'), {
+    type:'bar',
+    data:{ labels:['Feb','Mac','Apr','Mei','Jun','Jul'], datasets:[{label:'Aktiviti', data:[3,5,4,6,5,6], backgroundColor:'#14509E', borderRadius:6}] },
+    options:{ scales:{y:{beginAtZero:true}} }
+  });
+}
+
+/* ============ BOOTSTRAP ============ */
+buildSidebar();
+buildUnitsGrid();
+buildMeetings();
+renderTeachers();
+renderStudents();
+buildActivities();
+buildUnitActivities();
+buildAttendance();
+buildAnnouncements();
+buildGallery();
+buildDownloads();
+buildAdmin();
+buildModuleMgmt();
+updateClock();
+setInterval(updateClock, 1000);
+window.addEventListener('load', buildCharts);
+</script>
+</body>
+</html>
